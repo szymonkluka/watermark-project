@@ -1,37 +1,34 @@
-const fs = require('fs');
+const Jimp = require('jimp');
+const inquirer = require('inquirer');
 
-const genders = ['M', 'F'];
-const maleNames = ['Jacob', 'Marian', 'Andrew'];
-const femaleNames = ['Anna', 'Veronica', 'Sussane'];
-const lastNames = ['Costner', 'April', 'Strong'];
-const minAge = 18;
-const maxAge = 78;
+const addTextWatermarkToImage = async function (inputFile, outputFile, text) {
+  const image = await Jimp.read(inputFile);
+  const font = await Jimp.loadFont(Jimp.FONT_SANS_128_WHITE);
+  const textData = {
+    text,
+    alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
+    alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE,
+  }
+  image.print(font, 0, 0, textData, image.getWidth(), image.getHeight());
+  await image.quality(100).writeAsync(outputFile);
 
-function drawnPerson(arr) {
-    const randomElement = Math.floor(Math.random() * arr.length);
-    return arr = [randomElement]
-}
+};
+addTextWatermarkToImage('./test.jpg', './test-with-watermark.jpg', 'Hello world');
 
-const people = [];
+const addImageWatermarkToImage = async function (inputFile, outputFile, watermarkFile) {
+  const image = await Jimp.read(inputFile)
+  const watermark = await Jimp.read(watermarkFile)
+  watermark.resize(1400, 900)
+  const x = image.getWidth() / 2 - watermark.getWidth() / 2;
+  const y = image.getHeight() / 2 - watermark.getHeight() / 2;
 
-//user entered number will loop through while output will show multiples //
-for (let i = 1; i <= 20; i++) {
 
+  image.composite(watermark, x, y, {
+    mode: Jimp.BLEND_SOURCE_OVER,
+    opacitySource: 0.5,
 
-    const gender = drawnPerson(genders);
-    const firstName = drawnPerson(gender == 'M' ? maleNames : femaleNames);
-    const lastName = Math.floor(Math.random() * lastNames.length);
-    const age = Math.floor(Math.random() * ((minAge - 1), (maxAge + 1)));
+  });
+  await image.quality(100).writeAsync(outputFile);
+};
 
-    const pushPersons = {
-        gender, firstName, lastName, age
-    };
-    people.push(pushPersons);
-}
-
-const data = JSON.stringify(people)
-
-fs.writeFile('outputfile.txt', data, (err) => {
-    if (err) throw err;
-    console.log('The file has been saved!');
-});
+addImageWatermarkToImage('./test.jpg', './test-with-watermark2.jpg', './logo.png');
